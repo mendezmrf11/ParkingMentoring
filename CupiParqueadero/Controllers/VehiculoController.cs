@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace CupiParqueadero.Controllers
+namespace ParkingMentoring.Controllers
 {
     [EnableCors("ReglasCors")]
     [Route("api/[controller]")]
