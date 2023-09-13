@@ -1,4 +1,5 @@
 ﻿using CupiParqueadero.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +10,7 @@ namespace ParkingMentoring.Controllers
     [EnableCors("ReglasCors")]
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class VehiculoController : ControllerBase
     {
         private readonly DataContext _context;
@@ -19,7 +21,8 @@ namespace ParkingMentoring.Controllers
         }
 
         [HttpGet]
-        [Route("List")]
+        [Route("Get")]
+        [AllowAnonymous]
         public async Task<IActionResult> Get()
         {
             List<Vehicle> lista = new List<Vehicle>();
@@ -36,7 +39,8 @@ namespace ParkingMentoring.Controllers
         }
 
         [HttpGet]
-        [Route("List/{startTime:datetime}/{endTime:datetime}")]
+        [Route("Calculate/{startTime:datetime}/{endTime:datetime}")]
+        [AllowAnonymous]
         public async Task<IActionResult> Payment(DateTime startTime, DateTime endTime)
         {
             var calculator = new Vehicle();
@@ -45,7 +49,7 @@ namespace ParkingMentoring.Controllers
         }
 
         [HttpGet]
-        [Route("Get/{idVehicle:int}")]
+        [Route("GetById/{idVehicle:int}")]
         public async Task<IActionResult> GetId(int idVehicle)
         {
             Vehicle oVehicle = new Vehicle();
