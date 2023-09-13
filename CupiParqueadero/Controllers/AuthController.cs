@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using CupiParqueadero.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using ParkingMentoring.Models;
@@ -15,10 +16,29 @@ namespace ParkingMentoring.Controllers
         public static User user = new User();
 
         public readonly IConfiguration _configuration;
+        private readonly DataContext _context;
 
-        public AuthController(IConfiguration configuration) 
+        public AuthController(IConfiguration configuration, DataContext context) 
         {
             _configuration = configuration;
+            _context = context;
+        }
+
+        [HttpGet]
+        [Route("List")]
+        public async Task<IActionResult> Get()
+        {
+            List<User> lista = new List<User>();
+
+            try
+            {
+                lista = _context.Users.ToList();
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = "ok", response = lista });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = ex.Message, response = lista });
+            }
         }
 
         [HttpPost("Register")]
@@ -30,26 +50,37 @@ namespace ParkingMentoring.Controllers
             user.PasswordSalt = passwordSalt;
             user.PasswordHash = passwordHash;
 
-            return Ok(user);
-        }   
+            try
+            {
+                _context.Users.Add(user);
+                _context.SaveChanges();
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Usuario agregado con exito" });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = e.Message });
+            }
+        }
 
         [HttpPost("login")]
         public async Task<ActionResult<string>> Login(UserDto request)
         {
-            if(user.Username != request.Username)
+            var user = _context.Users.FirstOrDefault(u => u.Username == request.Username);
+
+            if (user == null)
             {
                 return BadRequest("User not found");
             }
 
-            if(!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
+            if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
             {
                 return BadRequest("Wrong password");
             }
 
             string token = CreateToken(user);
             return Ok(token);
-
         }
+
 
         private string CreateToken(User user)
         {
@@ -86,7 +117,7 @@ namespace ParkingMentoring.Controllers
 
         private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
         {
-            using (var hmac = new HMACSHA512(user.PasswordSalt))
+            using (var hmac = new HMACSHA512(passwordSalt))
             {
                 var computeHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
                 return computeHash.SequenceEqual(passwordHash);
