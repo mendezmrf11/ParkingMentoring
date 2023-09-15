@@ -72,7 +72,7 @@ namespace ParkingMentoring.Controllers
         }
 
         [HttpPost]
-        [Route("Save")]
+        [Route("Save"), Authorize(Roles = "Admin,Regular")]
         public async Task<IActionResult> AddVehiculo(Vehicle vehicle)
         {
             try
@@ -88,7 +88,7 @@ namespace ParkingMentoring.Controllers
         }
 
         [HttpPut]
-        [Route("Edit")]
+        [Route("Edit"), Authorize(Roles = "Admin")]
         public IActionResult EditVehiculo([FromBody] Vehicle objeto)
         {
             Vehicle oVehicle = _context.Vehicles.Find(objeto.Id);
@@ -116,7 +116,7 @@ namespace ParkingMentoring.Controllers
         }
 
         [HttpDelete]
-        [Route("Delete/{idVehicle:int}")]
+        [Route("Delete/{idVehicle:int}"), Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int idVehicle)
         {
             Vehicle oVehicle = _context.Vehicles.Find(idVehicle);

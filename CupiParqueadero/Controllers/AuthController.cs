@@ -1,6 +1,7 @@
 ﻿using CupiParqueadero.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.IdentityModel.Tokens;
 using ParkingMentoring.Models;
 using System.IdentityModel.Tokens.Jwt;
@@ -13,6 +14,7 @@ namespace ParkingMentoring.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
+
         public static User user = new User();
 
         public readonly IConfiguration _configuration;
@@ -23,6 +25,7 @@ namespace ParkingMentoring.Controllers
             _configuration = configuration;
             _context = context;
         }
+
 
         [HttpGet]
         [Route("List")]
@@ -44,7 +47,8 @@ namespace ParkingMentoring.Controllers
         [HttpPost("Register")]
         public async Task<ActionResult<User>> Register(UserDto request)
         {
-            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            var auth = new Auth(_context, _configuration);
+            auth.CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
 
             user.Username = request.Username;
             user.PasswordSalt = passwordSalt;
@@ -65,6 +69,7 @@ namespace ParkingMentoring.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<string>> Login(UserDto request)
         {
+            var auth = new Auth(_context, _configuration);
             var user = _context.Users.FirstOrDefault(u => u.Username == request.Username);
 
             if (user == null)
@@ -72,56 +77,12 @@ namespace ParkingMentoring.Controllers
                 return BadRequest("User not found");
             }
 
-            if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
+            if (!auth.VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
             {
                 return BadRequest("Wrong password");
             }
-
-            string token = CreateToken(user);
+            string token = auth.CreateToken(user);
             return Ok(token);
-        }
-
-
-        private string CreateToken(User user)
-        {
-            List<Claim> claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, "Admin")
-            };
-
-            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
-                _configuration.GetSection("AppSettings:Token").Value));
-
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-
-            var token = new JwtSecurityToken(
-                claims: claims,
-                expires: DateTime.Now.AddDays(1),
-                signingCredentials: creds);
-
-            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
-            return jwt;
-        }   
-
-
-        private void CreatePasswordHash(String password, out byte[] passwordHash, out byte[] passwordSalt)
-        {
-            using(var hmac = new HMACSHA512())
-            {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-            }
-        }
-
-        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
-        {
-            using (var hmac = new HMACSHA512(passwordSalt))
-            {
-                var computeHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-                return computeHash.SequenceEqual(passwordHash);
-            }
         }
     }
 }
