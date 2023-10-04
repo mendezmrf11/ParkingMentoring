@@ -4,6 +4,7 @@ using CupiParqueadero.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CupiParqueadero.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20231002213643_payVehicle")]
+    partial class payVehicle
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,11 +45,11 @@ namespace CupiParqueadero.Migrations
                     b.Property<string>("Make")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double?>("Pay")
-                        .HasColumnType("float");
+                    b.Property<int>("Pay")
+                        .HasColumnType("int");
 
-                    b.Property<DateTime?>("PayDate")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("PayDate")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Plate")
                         .HasColumnType("nvarchar(max)");

@@ -5,6 +5,8 @@ VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParkingMentoring", "CupiParqueadero\ParkingMentoring.csproj", "{2C31F7F6-255C-4039-9901-A89E015A0B89}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestCupiParqueadero", "TestCupiParqueadero\TestCupiParqueadero.csproj", "{50937C9B-9D4F-4EA9-ACF1-33B22499483C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{2C31F7F6-255C-4039-9901-A89E015A0B89}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C31F7F6-255C-4039-9901-A89E015A0B89}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C31F7F6-255C-4039-9901-A89E015A0B89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50937C9B-9D4F-4EA9-ACF1-33B22499483C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50937C9B-9D4F-4EA9-ACF1-33B22499483C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50937C9B-9D4F-4EA9-ACF1-33B22499483C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50937C9B-9D4F-4EA9-ACF1-33B22499483C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

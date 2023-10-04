@@ -1,15 +1,26 @@
 ﻿using ParkingChargeSimulator;
+using System.Text.Json.Serialization;
 
 namespace CupiParqueadero.Models
 {
     public class Vehicle
     {
+        
         public int Id { get; set; }
         public string? Plate { get; set; }
         public string? Make { get; set; }
         public string? Color { get; set; }
         public DateTime? EntryDate { get; set; } = DateTime.Now;
+        public DateTime? PayDate {  get; set; }
+        public bool? IsPayable { get; set; } = false;
+        public double? Pay { get; set; } = 0;
 
+        public Vehicle(string Plate, string Make, string Color)
+        {
+            this.Plate = Plate;
+            this.Make = Make;
+            this.Color = Color;
+        }
 
         /* This method calculates the number of hours during the day and night that 
         * the vehicle remains in the parking lot

@@ -4,13 +4,13 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ParkingMentoring.Models;
 
 namespace ParkingMentoring.Controllers
 {
     [EnableCors("ReglasCors")]
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class VehiculoController : ControllerBase
     {
         private readonly DataContext _context;
@@ -21,15 +21,15 @@ namespace ParkingMentoring.Controllers
         }
 
         [HttpGet]
-        [Route("Get")]
-        [AllowAnonymous]
+        [Authorize]
+        [Route("Get"), Authorize(Roles = "Admin, Regular")]
         public async Task<IActionResult> Get()
         {
             List<Vehicle> lista = new List<Vehicle>();
 
             try
             {
-                lista = _context.Vehicles.ToList();
+                lista = _context.Vehicles.Where(vehicle => vehicle.IsPayable == false).ToList();
                 return StatusCode(StatusCodes.Status200OK, new { mensaje = "ok", response = lista });
             }
             catch (Exception ex)
@@ -39,20 +39,39 @@ namespace ParkingMentoring.Controllers
         }
 
         [HttpGet]
-        [Route("Calculate/{startTime:datetime}/{endTime:datetime}")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Payment(DateTime startTime, DateTime endTime)
+        [Authorize]
+        [Route("GetActive"), Authorize(Roles = "Admin, Regular")]
+        public async Task<IActionResult> GetActive()
         {
-            var calculator = new Vehicle();
+            List<Vehicle> lista = new List<Vehicle>();
+
+            try
+            {
+                lista = _context.Vehicles.Where(vehicle => vehicle.IsPayable == true).ToList();
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = "ok", response = lista });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = ex.Message, response = lista });
+            }
+        }
+
+        [HttpGet]
+        [Authorize]
+        [Route("Calculate/{startTime:datetime}/{endTime:datetime}/{id:int}"), Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Payment(DateTime startTime, DateTime endTime, int id)
+        {
+            var calculator = new Vehicle("", "", "");
             double payment = calculator.PaymentParking(startTime, endTime);
+            HideVehiculo(id, payment);
             return StatusCode(StatusCodes.Status200OK, new { valuePay = payment});
         }
 
         [HttpGet]
-        [Route("GetById/{idVehicle:int}")]
+        [Route("GetById/{idVehicle:int}"), Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetId(int idVehicle)
         {
-            Vehicle oVehicle = new Vehicle();
+            Vehicle oVehicle = new Vehicle("", "", "");
             oVehicle = _context.Vehicles.Find(idVehicle);
 
             if(oVehicle == null)
@@ -72,12 +91,18 @@ namespace ParkingMentoring.Controllers
         }
 
         [HttpPost]
-        [Route("Save"), Authorize(Roles = "Admin,Regular")]
-        public async Task<IActionResult> AddVehiculo(Vehicle vehicle)
+        [Authorize]
+        [Route("Save"), Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AddVehiculo(VehicleDto vehicle)
         {
             try
             {
-                _context.Vehicles.Add(vehicle);
+                Vehicle oVehicle = _context.Vehicles.FirstOrDefault(v => v.Plate == vehicle.Plate && v.IsPayable == false);
+                if (oVehicle != null)
+                    return BadRequest("Vehicle already exists");
+
+                Vehicle vehicle1 = new Vehicle(vehicle.Plate, vehicle.Make, vehicle.Color);
+                _context.Vehicles.Add(vehicle1);
                 _context.SaveChanges();
                 return StatusCode(StatusCodes.Status200OK, new { mensaje = "Vehiculo agregado con exito" });
             }
@@ -106,7 +131,34 @@ namespace ParkingMentoring.Controllers
 
                 _context.Vehicles.Update(oVehicle);
                 _context.SaveChanges();
-                return StatusCode(StatusCodes.Status200OK, new { mensaje = "ok" });
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Vehiculo agregado con exito" });
+            }
+
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = e.Message });
+            }
+        }
+
+        [HttpPut]
+        [Route("Hide/{id:int}/{value:double}"), Authorize(Roles = "Admin")]
+        public IActionResult HideVehiculo(int id, double value)
+        {
+            Vehicle oVehicle = _context.Vehicles.Find(id);
+            if (oVehicle == null)
+            {
+                return BadRequest("Vehicle not found");
+            }
+
+            try
+            {
+                oVehicle.Pay = value;
+                oVehicle.IsPayable = true;
+                oVehicle.PayDate = DateTime.Now;
+
+                _context.Vehicles.Update(oVehicle);
+                _context.SaveChanges();
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Vehiculo escondido con exito" });
             }
 
             catch (Exception e)
@@ -130,7 +182,7 @@ namespace ParkingMentoring.Controllers
             {
                 _context.Vehicles.Remove(oVehicle);
                 _context.SaveChanges();
-                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Ok" });
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Vehiculo eliminado con exito" });
             }
             catch (Exception e)
             {
